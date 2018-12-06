@@ -230,6 +230,11 @@ def make_clique_graph(cliques):
     return graph
 
 def traverse_tree(mst, root, Z):
+    '''
+    Traverse the tree using BFS. Sets up the parent-child relation
+    between nodes. Also conditions the factors in the tree based
+    on the given observations
+    '''
     q = queue.Queue()
     visited = {node : False for node in mst.nodes.keys()}
 
@@ -238,23 +243,28 @@ def traverse_tree(mst, root, Z):
 
     while not q.empty():
         u = q.get()
+
+        # Condition factor on observation
         mst.nodes[u].factor = condition_factor(mst.nodes[u].factor, Z)
 
         for v in mst.neighbours[u]:
             if not visited[v]:
                 visited[v] = True
+                
+                # Set up parent-child relation
                 mst.nodes[u].children.add(mst.nodes[v])
                 mst.nodes[v].parent = mst.nodes[u]
+                
                 q.put(v)
 
 def bottom_up_propagation(clique):
     # Update belief with the message from each child
     for c in clique.children:
         r = bottom_up_propagation(c)
-        
+
         # Store the received message
         clique.received[c] = r
-        
+
         # Update the belief
         clique.factor = multiply(clique.factor, r)
 
@@ -263,8 +273,8 @@ def bottom_up_propagation(clique):
         return
 
     m = clique.factor
-    
-    # Project message on common vars 
+
+    # Project message on common vars
     out_vars = clique.vars  - (clique.vars & clique.parent.vars)
     for var in out_vars:
         m = sum_out(var, m)
@@ -297,9 +307,10 @@ def belief_propagation(root):
     '''
     # Propagate from leaves to root
     bottom_up_propagation(root)
-    
+
     # Propagate from root to leaves
     top_down_propagation(root, None)
+
 
 def get_dictionary_from_input(input):
     # Remove ' '
@@ -387,25 +398,32 @@ def main():
 
             required_vars = set(infs.keys())
 
-            available = list(filter(lambda clique: not (set(required_vars) - set(clique.factor.vars)), test_mst.nodes.values()))
+            # Find a clique that contains all of the required vars
+            available = None
+            for clique in test_mst.nodes.values():
+                if not (set(required_vars) - set(clique.vars)):
+                    available = clique.factor
+                    break
 
             # Skip bonus tests
             if not available:
                 results.append(0.0)
                 continue
-            
+
             # Choose a factor that contains all the required vars
-            good_factor = available[0].factor
+            good_factor = available
 
+            # Keep only the required vars in the factor
             out_vars = set(good_factor.vars) - required_vars
-
             for var in out_vars:
                 good_factor = sum_out(var, good_factor)
 
+            # Build the required binding
             inferred_tuple = [0 for var in required_vars]
             for (var, val) in infs.items():
                 inferred_tuple[good_factor.vars.index(var)] = val
 
+            # Calculate probability
             p = good_factor.values[tuple(inferred_tuple)] / sum(good_factor.values.values())
             results.append(p)
 

@@ -1,0 +1,16 @@
+Tema #2 AI
+Ciupitu Andrei Valentin
+341C4
+
+Detalii de implementare -------------------------------------------------------
+
+Pentru citirea retelei am implementat un graf in care nodurile sunt
+variabilele. Din algoritmul Bron-Kerbosh am obtinut clicile ca multimi de
+variabile. Am construit apoi graful de clici, in care nodurile sunt clici care
+au asociate si un factor, initial nul.
+
+Am stabilit relatiile parinte-copii in arbore atunci cand am parcurs arborele
+pentru a conditiona factorii. Fiecare nod clica isi retine copiii si parintele.
+
+Functiile de inmultire a factorilor, conditionare si eliminare prin insumare
+le-am implementat ca in laboratorul 9.
